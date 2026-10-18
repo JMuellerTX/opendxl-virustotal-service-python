@@ -49,6 +49,8 @@ class VirusTotalApiRequestCallback(RequestCallback):
 
         :param req_dict: The request dictionary
         """
+        if not isinstance(req_dict, dict):
+            raise ValueError("Request payload must be a JSON object")
         if self._required_params:
             for param in self._required_params:
                 if param not in req_dict:
@@ -84,6 +86,8 @@ class VirusTotalApiRequestCallback(RequestCallback):
 
             # Parameters
             params = MessageUtils.json_payload_to_dict(request)
+            if not isinstance(params, dict):
+                raise ValueError("Request payload must be a JSON object")
             params["apikey"] = self._app.api_key
 
             # Validate parameters
@@ -120,9 +124,12 @@ class VirusTotalApiRequestCallback(RequestCallback):
             self._app.client.send_response(res)
 
         except Exception as ex:
-            logger.exception("Error handling request")
             err_message = str(ex)
-            err_message = err_message.replace(self._app.api_key, "--api-key--")
+            if self._app and getattr(self._app, "api_key", None):
+                err_message = err_message.replace(
+                    self._app.api_key, "--api-key--")
+            logger.error("Error handling request: %s", err_message)
             err_res = ErrorResponse(request, error_message=MessageUtils.encode(
                 err_message))
             self._app.client.send_response(err_res)
+

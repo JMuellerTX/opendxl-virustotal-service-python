@@ -287,3 +287,21 @@ class TestVtRequestCallback(BaseClientTest):
                 "500 Server Error: 500 - Internal Server Error for url: ",
                 res._error_message
             )
+
+    def test_non_dict_payload_and_apikey_redaction(self):
+        with MockServerRunner() as server_runner, \
+                VirusTotalApiService(TEST_FOLDER) as vt_service:
+
+            vt_service.VTAPI_URL_FORMAT = "http://127.0.0.1:" \
+                                          + str(server_runner.mock_server_port) \
+                                          + HTTP_ERROR_SERVER_PATH
+            vt_service.run()
+
+            request_topic = VirusTotalApiService.REQ_TOPIC_DOMAIN_REPORT
+            req = Request(request_topic)
+            req.payload = b'["not", "a", "dict"]'
+
+            res = vt_service._dxl_client.sync_request(req, timeout=30)
+            self.assertEqual(res.message_type, Response.MESSAGE_TYPE_ERROR)
+            self.assertIn("JSON object", res.error_message)
+
