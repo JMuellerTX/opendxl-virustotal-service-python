@@ -100,12 +100,12 @@ class VirusTotalApiRequestCallback(RequestCallback):
             # Check HTTP response code
             status_code = vtapi_response.status_code
             if status_code != 200:
-                vtapi_response.raise_for_status()
                 http_message = self._get_http_error_message(status_code)
                 if http_message:
                     raise Exception(
                         "VirusTotal error, {0} ({1})".format(http_message,
                                                              str(status_code)))
+                vtapi_response.raise_for_status()
                 raise Exception(
                     "VirusTotal error, HTTP response code: {0}".format(
                         status_code))
